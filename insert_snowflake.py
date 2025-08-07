@@ -1,11 +1,13 @@
+import os
+from dotenv import load_dotenv
 import snowflake.connector
 import pandas as pd
 import requests
 from datetime import datetime, timezone
 import logging
 
-# Enable debug logging
-# logging.basicConfig(level=logging.DEBUG)
+# Load environment variables from .env file
+load_dotenv()
 
 # 1. Fetch crypto data
 url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
@@ -23,21 +25,21 @@ data = [
 df = pd.DataFrame(data)
 print(df)
 
-# 2. Connect to Snowflake
+# 2. Connect to Snowflake using environment variables
 try:
     conn = snowflake.connector.connect(
-        user='YASSINE',
-        password='uRvCW8BZkzvM2n4',
-        account='zvdggde-jq68575',  # lowercase, no .snowflakecomputing.com
-        warehouse='ETL_WH',
-        database='REALTIME_PROJECT',
-        schema='RAW_DATA',
+        user=os.getenv("SNOWFLAKE_USER"),
+        password=os.getenv("SNOWFLAKE_PASSWORD"),
+        account=os.getenv("SNOWFLAKE_ACCOUNT"),
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),
+        schema=os.getenv("SNOWFLAKE_SCHEMA"),
     )
 
     cursor = conn.cursor()
-    cursor.execute("USE SCHEMA RAW_DATA")  # Ensure schema is set
+    cursor.execute("USE SCHEMA RAW_DATA")  # Optional
 
-    # 3. Create table if not exists and insert data
+    # 3. Create table and insert data
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS CRYPTO_PRICES (
             crypto VARCHAR,
